@@ -141,6 +141,8 @@ test('大神的算法', () => {
 
     constructor (arr: number[]) {
       this.a = arr
+      this.b = new Array(205)
+      this.d = new Array(20005).fill(0)
       const n = arr.length
       this.s = Math.floor(Math.sqrt(n * 2))
       this.N = 0
