@@ -78,53 +78,45 @@ test('优化算法', () => {
     readonly valueIndexs: {[k:string]:number[]} = {}
     readonly valueReverseIndexs: {[k:string]:number[]} = {}
 
+    // 每个值在数组中的index指定的位置出现过多少次
+    readonly itemNums: Map<number, number[]> = new Map<number, number[]>()
+
     allNumMap: {[k:string]:number[]} = {}
 
     constructor(arr: number[]) {
-      arr.forEach((a, index) => {
-        if(!this.valueIndexs[a]){
-          this.valueIndexs[a] = []
-          this.valueReverseIndexs[a] = []
-        }
-        this.valueIndexs[a].push(index)
-        this.valueReverseIndexs[a].unshift(index)
+      const items: Set<number> = new Set()
+      arr.forEach((a) => {
+        items.add(a)
       })
+
+      const map = new Map<number, number[]>()
+      for (const item of items){
+        map.set(item, [])
+      }
+
+      arr.forEach((a) => {
+        for (const [k, v] of map) {
+          v.push(0)
+          map.set(k, v)
+        }
+
+        const nums = map.get(a) || [0]
+        nums[nums.length - 1] = nums[nums.length - 2] + 1
+        map.set(a, nums)
+      })
+
+      this.itemNums = map
     }
 
     query(left: number, right: number, threshold: number): number {
-      let match = -1
-      const half = (right - left + 1) / 2
-
-      const k = `${left}-${right}`
-      if(this.allNumMap[k]){
-        return this.allNumMap[k][1] >= threshold ? this.allNumMap[k][0] : -1
+      const {itemNums} = this
+      for (const [item, nums] of itemNums){
+        if (nums[right + 1] - nums[left] >= threshold) {
+          return item
+        }
       }
 
-      Object.keys(this.valueIndexs).some(value => {
-        const indexs = this.valueIndexs[value]
-        const start = indexs.findIndex(d => d >= left)
-        if(start < 0 || indexs[start] > right){
-          return false
-        }
-        const end = this.valueReverseIndexs[value].findIndex(d => d <= right)
-        const end1 = indexs.length - end - 1
-        if(indexs[end1] < start){
-          return false
-        }
-        const num = end1 - start + 1
-
-        if(num >= threshold){
-          match = parseInt(value)
-          this.allNumMap[k] = [parseInt(value), num]
-          return true
-        } else if (num >= half) {
-          this.allNumMap[k] = [parseInt(value), num]
-          return true
-        }
-        return false
-      })
-
-      return match
+      return -1
     }
   }
 
@@ -135,35 +127,38 @@ test('大神的算法', () => {
   class MajorityChecker {
     s:number
     a: number[]
-    b: number[][] = new Array(205)
+    b: number[][]
     N: number
     d: number[] = new Array(20005).fill(0)
 
     constructor (arr: number[]) {
-      this.a = arr
-      this.b = new Array(205)
+      this.b = new Array(205).fill(0).map(
+        () => new Array(20005).fill(0)
+      )
       this.d = new Array(20005).fill(0)
+      this.a = arr
       const n = arr.length
-      this.s = Math.floor(Math.sqrt(n * 2))
+      this.s = Math.floor(Math.sqrt(n * 2)) // 数组长度两倍的根号二，暂不明白干嘛用，这个比数组长度低
       this.N = 0
+
       const map = new Map()
-      const half = this.s / 2
-      for(let x of arr) {
+      arr.forEach(x => {
         if(map.has(x)) {
           map.set(x, map.get(x) + 1)
-        } else map.set(x, 1)
-      }
+        } else {
+          map.set(x, 1)
+        }
+      })
 
-      for(let i = 0; i < this.b.length; i++) {
-        this.b[i] = new Array(20005).fill(0)
-      }
-
+      // 这不是数组长度的一半，这个比数组长度低很多倍，但至少是1，除以2之后有可能带小数
+      const half = this.s / 2
       for(let [x, count] of map) {
         if(count > half ) {
-          this.b[++this.N][0] = 0
+          this.N++
+          this.b[this.N][0] = 0
           this.d[this.N] = x
           for(let j = 0;j < n; j++) {
-            this.b[this.N][j + 1] = this.b[this.N][j] + (this.a[j] === this.d[this.N] ? 1 : 0)
+            this.b[this.N][j + 1] = this.b[this.N][j] + (arr[j] === x ? 1 : 0)
           }
         }
       }
@@ -174,6 +169,7 @@ test('大神的算法', () => {
       if((right - left) <= this.s) {
         let j = 0
         let k = 0
+        // 查询区间内哪个值出现最多次
         for(let i = left; i <= right; i++) {
           if(a[i] === j) {
             k++
@@ -185,6 +181,7 @@ test('大神的算法', () => {
           }
         }
         k = 0
+        // 查询最多次那个值具体出现了多少次
         for(let i = left;i <= right; i++) {
           if(a[i] === j) k++
         }
