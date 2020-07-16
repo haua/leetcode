@@ -34,7 +34,7 @@ const ret = function (msec: number) {
     (r.hour ? `${r.hour}hour` : '') +
     (r.min ? `${r.min}minute` : '') +
     (r.sec ? `${r.sec}second` : '') +
-    (r.msec ? `${r.msec}micro second` : '')
+    (r.msec ? `${r.msec}ms` : '') || '0ms'
 
   return r
 }

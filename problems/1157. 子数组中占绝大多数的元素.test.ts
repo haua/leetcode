@@ -16,7 +16,7 @@ interface MajorityCheckerInstT {
 
 const check = (MajorityChecker: MajorityCheckerT) => {
   data.forEach(data => {
-    console.log(1212, data.init)
+    console.log('init数据：', data.init)
     stopwatch.mark()
     const inst = new MajorityChecker(data.init)
     console.log('init耗时：', stopwatch.mark().msg)
@@ -31,7 +31,7 @@ const check = (MajorityChecker: MajorityCheckerT) => {
         expect([-1, 1, 2].includes(res)).toBe(true);
       }
     })
-    console.log('query耗时：', stopwatch.mark().msg)
+    console.log(`query ${data.params.length} 次，耗时：`, stopwatch.mark().msg)
   })
 }
 
@@ -77,50 +77,80 @@ test('常规暴力算法', () => {
 })
 
 test('优化算法', () => {
+  const tempNums: number[][] = new Array(200).fill(0).map(() => new Array(20000).fill(0))
   class MajorityChecker {
     // 每个值在数组中的index指定的位置出现过多少次
     readonly itemNums: {[k: number]: number[]} = {}
-    readonly items: Set<number> = new Set<number>()
-
-    temp: Map<string, number> = new Map<string, number>()
+    readonly items: Array<number> = []
+    readonly threshold: number = 0
+    readonly arr: number[] = []
 
     constructor(arr: number[]) {
-      const items: Set<number> = new Set(arr)
+      this.arr = arr
+      const arrLen = arr.length
 
-      this.items = items
+      this.threshold = Math.floor(Math.sqrt(arrLen * 2)) // 数组长度两倍的根号二，有的值出现次数太少，每次都遍历它们太浪费性能
 
-      stopwatch.mark('111')
+      const numMap: {[k: number]: number} = {}
+      arr.forEach(a => {
+        if(!numMap[a]){
+          numMap[a] = 0
+        }
+        numMap[a]++
+      })
+
+      const items = Object.keys(numMap).map(d => parseInt(d))
+
+      const halfThreshold = this.threshold / 2
+      const aboutThresholds = items.filter(d => numMap[d] > halfThreshold)
+
+      this.items = aboutThresholds
 
       const map: {[k: number]: number[]} = {}
-      for (const item of items){
-        map[item] = new Array(arr.length + 1).fill(0)
-      }
-
-      console.log(111, stopwatch.mark('111').msg)
+      aboutThresholds.forEach((item, i) => {
+        map[item] = tempNums[i]
+        map[item][0] = 0
+      })
 
       arr.forEach((a, i) => {
-        for (const item of items) {
+        for (const item of aboutThresholds) {
           map[item][i + 1] = map[item][i] + (item === a ? 1 : 0)
         }
       })
-
-      console.log(222, stopwatch.mark('111').msg)
 
       this.itemNums = map
     }
 
     query(left: number, right: number, threshold: number): number {
-      const {itemNums, temp, items} = this
+      const {itemNums, items, arr} = this
 
-      const k = `${left}-${right}`
-      if(temp.has(k)){
-        return temp.get(k) || 0
-      }
-      for (const item of items){
-        const nums = itemNums[item]
-        if (nums[right + 1] - nums[left] >= threshold) {
-          temp.set(k, item)
-          return item
+      if (right - left <= this.threshold) {
+        let j = 0
+        let k = 0
+        // 查询区间内哪个值出现最多次
+        for(let i = left; i <= right; i++) {
+          if(arr[i] === j) {
+            k++
+          } else if(k) {
+            k--
+          } else {
+            j = arr[i]
+            k = 1
+          }
+        }
+        k = 0
+        // 查询最多次那个值具体出现了多少次
+        for(let i = left;i <= right; i++) {
+          if(arr[i] === j) k++
+        }
+
+        return k >= threshold ? j : -1
+      } else {
+        for (const item of items){
+          const nums = itemNums[item]
+          if (nums[right + 1] - nums[left] >= threshold) {
+            return item
+          }
         }
       }
 
