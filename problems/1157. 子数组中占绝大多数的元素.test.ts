@@ -36,7 +36,7 @@ const check = (MajorityChecker: MajorityCheckerT) => {
 }
 
 // 2s左右
-test('常规暴力算法', () => {
+test('我的算法', () => {
   class MajorityChecker {
     readonly array: number[] = []
 
