@@ -8,11 +8,15 @@ export default [
       "hi","qa","pi","os","uh","wm","an","me","mo","na","la","st","er","sc","ne","mn","mi",
       "am","ex","pt","io","be","fm","ta","tb","ni","mr"
     ]],
-    "results": 9
+    "results": 5
   },
   {
     "params": ["hit", "cog", ["hot","dot","dog","lot","log","cog"]],
     "results": 5
+  },
+  {
+    "params": ["hit", "cog", ["hot","dot","dog","lot","log"]],
+    "results": 0
   }
 ] as {
   params: [string, string, string[]]
