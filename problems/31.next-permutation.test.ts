@@ -1,3 +1,5 @@
+// https://leetcode-cn.com/problems/next-permutation/
+
 import data from './31.next-permutation-data'
 
 const check = (fn: (nums: number[]) => void) => {
